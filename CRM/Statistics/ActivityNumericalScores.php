@@ -92,7 +92,7 @@ class CRM_Statistics_ActivityNumericalScores {
         }
         if ($resultsToSave) {
           foreach ($results as $entityName => $entityResults) {
-            if (empty($entity)) {
+            if (empty($entityName)) {
               continue;
             }
             switch ($entityName) {
