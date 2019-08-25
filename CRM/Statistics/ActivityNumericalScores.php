@@ -83,7 +83,7 @@ class CRM_Statistics_ActivityNumericalScores {
               if (($result !== NULL) && ($result !== (int) $activityDetails[$metadata['resultField']])) {
                 // We only save the result if it's not NULL (ie. some questions have been answered) and it is different from the saved value
                 $resultsToSave=TRUE;
-                $activityParams[$metadata['resultField']] = $result;
+                $results[$metadata['resultEntity']][$metadata['resultField']] = $result;
                 $counts['numberOfChangedCalculations'][$metadata['name']] += 1;
               }
             break;
@@ -91,12 +91,29 @@ class CRM_Statistics_ActivityNumericalScores {
           $counts['numberOfCalculations'][$metadata['name']] = CRM_Utils_Array::value($metadata['name'], $counts['numberOfCalculations']) + 1;
         }
         if ($resultsToSave) {
-          $activityParams['id'] = $activityId;
-          if (!empty($activityDetails['case_id'])) {
-            // Need to specify so "is_current_revision" is handled correctly
-            $activityParams['case_id'] = CRM_Utils_Array::first($activityDetails['case_id']);
+          foreach ($results as $entityName => $entityResults) {
+            if (empty($entity)) {
+              continue;
+            }
+            switch ($entityName) {
+              case 'case':
+                if (empty($activityDetails['case_id'])) {
+                  continue;
+                }
+                $entityResults['id'] = CRM_Utils_Array::first($activityDetails['case_id']);
+                break;
+
+              case 'activity':
+                $entityResults['id'] = $activityId;
+                if (!empty($activityDetails['case_id'])) {
+                  // Need to specify so "is_current_revision" is handled correctly
+                  $entityResults['case_id'] = CRM_Utils_Array::first($activityDetails['case_id']);
+                }
+                break;
+
+            }
+            civicrm_api3(ucfirst($entityName), 'create', $entityResults);
           }
-          civicrm_api3('Activity', 'create', $activityParams);
         }
       }
     }
