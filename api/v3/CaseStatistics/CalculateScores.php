@@ -11,7 +11,7 @@ use CRM_TheHarbour_ExtensionUtil as E;
  */
 function _civicrm_api3_case_statistics_Calculate_Scores_spec(&$spec) {
   $spec['activity_id']['api.required'] = 0;
-  $spec['activity_id']['title'] = 'The Activity ID (optional)';
+  $spec['activity_id']['title'] = 'The Activity ID';
   $spec['activity_id']['description'] = 'If not specified, scores will be calculated for all activities';
 }
 
@@ -26,6 +26,9 @@ function _civicrm_api3_case_statistics_Calculate_Scores_spec(&$spec) {
  */
 function civicrm_api3_case_statistics_Calculate_Scores($params) {
   if (!empty($params['activity_id'])) {
+    if (isset($params['activity_id']['IN'])) {
+      $params['activity_id'] = $params['activity_id']['IN'];
+    }
     $result = CRM_Statistics_ActivityNumericalScores::calculate($params['activity_id']);
     return civicrm_api3_create_success(array($result), $params, 'CaseStatistics', 'Calculate_Scores');
   }

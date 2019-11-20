@@ -46,8 +46,8 @@ class CRM_Statistics_ActivityNumericalScores {
       'is_current_revision' => 1,
       'options' => array('limit' => 0),
     );
-    if ($activityIds) {
-      $activityParams['activity_id'] = $activityIds;
+    if (!empty($activityIds)) {
+      $activityParams['id'] = ['IN' => $activityIds];
     }
     $activityIdsResult = civicrm_api3('Activity', 'get', $activityParams);
     return array_keys($activityIdsResult['values']);
