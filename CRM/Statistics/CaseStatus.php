@@ -3,7 +3,9 @@
 class CRM_Statistics_CaseStatus {
 
   public static function createSourceDataForStatusCounts() {
-    $sqlSourceData = "DROP TABLE IF EXISTS civicrm_statistics_casestatus;
+    $sqlSourceDelete = "DROP TABLE IF EXISTS civicrm_statistics_casestatus";
+    CRM_Core_DAO::executeQuery($sqlSourceDelete);
+    $sqlSourceData = "
 CREATE TABLE civicrm_statistics_casestatus AS
 SELECT cc.id as case_id,lcc.modified_date,lcc.status_id,cc.start_date,cc.end_date,cov.label,ccc.contact_id,ccon.display_name FROM civicrm_case cc
 INNER JOIN log_civicrm_case lcc ON cc.id = lcc.id
@@ -12,7 +14,7 @@ LEFT JOIN
 ON cov.value = lcc.status_id
 LEFT JOIN civicrm_case_contact ccc ON cc.id = ccc.case_id
 LEFT JOIN civicrm_contact ccon ON ccc.contact_id = ccon.id
-GROUP BY lcc.id,lcc.status_id ORDER BY cc.id ASC,lcc.modified_date ASC;";
+GROUP BY lcc.id,lcc.status_id ORDER BY cc.id ASC,lcc.modified_date ASC";
     CRM_Core_DAO::executeQuery($sqlSourceData);
   }
 
