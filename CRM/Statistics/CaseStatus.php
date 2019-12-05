@@ -29,6 +29,7 @@ ORDER BY cc.id ASC,lcc.modified_date ASC";
 
     $caseStatus = ['current' => NULL, 'previous' => NULL];
     $caseID = ['current' => NULL, 'previous' => NULL];
+    $caseModified = ['current' => NULL, 'previous' => NULL];
     $count = 0;
     while ($dao->fetch()) {
       $count++;
@@ -36,17 +37,19 @@ ORDER BY cc.id ASC,lcc.modified_date ASC";
         return;
       }
       $caseID['previous'] = $caseID['current'];
-      $caseStatus['previous'] = $caseID['current'];
+      $caseStatus['previous'] = $caseStatus['current'];
+      $caseModified['previous'] = $caseModified['current'];
 
       $caseID['current'] = (int) $dao->case_id;
       $caseStatus['current'] = (int) $dao->status_id;
+      $caseModified['current'] = $dao->modified_date;
 
       $queryParams = [
         1 => [$dao->case_id, 'Integer'],
-        2 => [$dao->modified_date, 'Timestamp'],
+        2 => [CRM_Utils_Date::isoToMysql($dao->modified_date), 'Timestamp'],
         3 => [$dao->status_id, 'Integer'],
-        4 => [$dao->start_date, 'Date'],
-        5 => [$dao->end_date, 'Date'],
+        4 => [CRM_Utils_Date::isoToMysql($dao->start_date), 'Date'],
+        5 => [CRM_Utils_Date::isoToMysql($dao->end_date), 'Date'],
         6 => [$dao->label, 'String'],
       ];
       if ($caseID['current'] !== $caseID['previous']) {
@@ -58,6 +61,9 @@ ORDER BY cc.id ASC,lcc.modified_date ASC";
       }
       if ($caseStatus['current'] !== $caseStatus['previous']) {
         if ($caseID['current'] === $caseID['previous']) {
+          if ($caseModified['current'] === $caseModified['previous']) {
+            continue;
+          }
           // New status for current case
           $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
                   VALUES (%1, %2, %3, %4, %5, %6)";
