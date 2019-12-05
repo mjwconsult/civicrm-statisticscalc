@@ -41,19 +41,27 @@ ORDER BY cc.id ASC,lcc.modified_date ASC";
       $caseID['current'] = (int) $dao->case_id;
       $caseStatus['current'] = (int) $dao->status_id;
 
+      $queryParams = [
+        1 => [$dao->case_id, 'Integer'],
+        2 => [$dao->modified_date, 'Timestamp'],
+        3 => [$dao->status_id, 'Integer'],
+        4 => [$dao->start_date, 'Date'],
+        5 => [$dao->end_date, 'Date'],
+        6 => [$dao->label, 'String'],
+      ];
       if ($caseID['current'] !== $caseID['previous']) {
         // New case to record status
         $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
-                VALUES ({$dao->case_id},{$dao->modified_date},{$dao->status_id},{$dao->start_date},{$dao->end_date},{$dao->label})";
-        CRM_Core_DAO::executeQuery($sql);
+                VALUES (%1, %2, %3, %4, %5, %6)";
+        CRM_Core_DAO::executeQuery($sql, $queryParams);
         continue;
       }
       if ($caseStatus['current'] !== $caseStatus['previous']) {
         if ($caseID['current'] === $caseID['previous']) {
           // New status for current case
           $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
-                VALUES ('{$dao->case_id}','{$dao->modified_date}','{$dao->status_id}','{$dao->start_date}','{$dao->end_date}','{$dao->label}')";
-          CRM_Core_DAO::executeQuery($sql);
+                  VALUES (%1, %2, %3, %4, %5, %6)";
+          CRM_Core_DAO::executeQuery($sql, $queryParams);
           continue;
         }
       }
@@ -72,7 +80,8 @@ ORDER BY cc.id ASC,lcc.modified_date ASC";
         `status_id` int(10) unsigned DEFAULT NULL COMMENT 'Id of case status.',
         `start_date` date DEFAULT NULL COMMENT 'Date on which given case starts.',
         `end_date` date DEFAULT NULL COMMENT 'Date on which given case ends.',
-        `label` varchar(512) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Option string as displayed to users - e.g. the label in an HTML OPTION tag.'
+        `label` varchar(512) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Option string as displayed to users - e.g. the label in an HTML OPTION tag.',
+        PRIMARY KEY (`id`)
     )";
 
     CRM_Core_DAO::executeQuery($sqlSourceCreate);
