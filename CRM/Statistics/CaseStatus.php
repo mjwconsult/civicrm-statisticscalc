@@ -3,8 +3,7 @@
 class CRM_Statistics_CaseStatus {
 
   public static function createSourceDataForStatusCounts() {
-    $sqlSourceDelete = "DROP TABLE IF EXISTS civicrm_statistics_casestatus";
-    CRM_Core_DAO::executeQuery($sqlSourceDelete);
+    /*
     $sqlSourceData = "
 CREATE TABLE civicrm_statistics_casestatus AS
 SELECT cc.id as case_id,lcc.modified_date,lcc.status_id,cc.start_date,cc.end_date,cov.label,ccc.contact_id,ccon.display_name FROM civicrm_case cc
@@ -15,7 +14,68 @@ ON cov.value = lcc.status_id
 LEFT JOIN civicrm_case_contact ccc ON cc.id = ccc.case_id
 LEFT JOIN civicrm_contact ccon ON ccc.contact_id = ccon.id
 GROUP BY lcc.id,lcc.status_id ORDER BY cc.id ASC,lcc.modified_date ASC";
-    CRM_Core_DAO::executeQuery($sqlSourceData);
+    */
+
+    $sqlSourceData = "SELECT cc.id as case_id,lcc.modified_date,lcc.status_id,cc.start_date,cc.end_date,cov.label,ccc.contact_id,ccon.display_name FROM civicrm_case cc
+INNER JOIN log_civicrm_case lcc ON cc.id = lcc.id
+LEFT JOIN
+    (SELECT value,label FROM civicrm_option_value WHERE option_group_id = (SELECT id FROM civicrm_option_group WHERE name='case_status')) as cov
+ON cov.value = lcc.status_id
+LEFT JOIN civicrm_case_contact ccc ON cc.id = ccc.case_id
+LEFT JOIN civicrm_contact ccon ON ccc.contact_id = ccon.id
+ORDER BY cc.id ASC,lcc.modified_date ASC";
+
+    $dao = CRM_Core_DAO::executeQuery($sqlSourceData);
+
+    $caseStatus = ['current' => NULL, 'previous' => NULL];
+    $caseID = ['current' => NULL, 'previous' => NULL];
+    $count = 0;
+    while ($dao->fetch()) {
+      $count++;
+      if ($count > 1000) {
+        return;
+      }
+      $caseID['previous'] = $caseID['current'];
+      $caseStatus['previous'] = $caseID['current'];
+
+      $caseID['current'] = (int) $dao->case_id;
+      $caseStatus['current'] = (int) $dao->status_id;
+
+      if ($caseID['current'] !== $caseID['previous']) {
+        // New case to record status
+        $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
+                VALUES ({$dao->case_id},{$dao->modified_date},{$dao->status_id},{$dao->start_date},{$dao->end_date},{$dao->label})";
+        CRM_Core_DAO::executeQuery($sql);
+        continue;
+      }
+      if ($caseStatus['current'] !== $caseStatus['previous']) {
+        if ($caseID['current'] === $caseID['previous']) {
+          // New status for current case
+          $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
+                VALUES ({$dao->case_id},{$dao->modified_date},{$dao->status_id},{$dao->start_date},{$dao->end_date},{$dao->label})";
+          CRM_Core_DAO::executeQuery($sql);
+          continue;
+        }
+      }
+
+    }
+  }
+
+  public static function createSourceTable() {
+    if (CRM_Core_DAO::checkTableExists('civicrm_statistics_casestatus')) {
+      return;
+    }
+    $sqlSourceCreate = "CREATE TABLE `civicrm_statistics_casestatus` (
+        `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        `case_id` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Unique Case ID',
+        `modified_date` timestamp NULL DEFAULT NULL COMMENT 'When was the case (or closely related entity) was created or modified or deleted.',
+        `status_id` int(10) unsigned DEFAULT NULL COMMENT 'Id of case status.',
+        `start_date` date DEFAULT NULL COMMENT 'Date on which given case starts.',
+        `end_date` date DEFAULT NULL COMMENT 'Date on which given case ends.',
+        `label` varchar(512) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Option string as displayed to users - e.g. the label in an HTML OPTION tag.'
+    )";
+
+    CRM_Core_DAO::executeQuery($sqlSourceCreate);
   }
 
   public static function createTargetTable() {

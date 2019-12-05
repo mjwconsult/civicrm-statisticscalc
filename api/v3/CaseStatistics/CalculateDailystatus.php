@@ -29,6 +29,7 @@ function _civicrm_api3_case_statistics_Calculate_Dailystatus_spec(&$spec) {
  */
 function civicrm_api3_case_statistics_Calculate_Dailystatus($params) {
   CRM_Statistics_CaseStatus::createTargetTable();
+  CRM_Statistics_CaseStatus::createSourceTable();
   CRM_Statistics_CaseStatus::createSourceDataForStatusCounts();
 
   if (!empty($params['date'])) {
