@@ -52,7 +52,7 @@ ORDER BY cc.id ASC,lcc.modified_date ASC";
         if ($caseID['current'] === $caseID['previous']) {
           // New status for current case
           $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
-                VALUES ({$dao->case_id},{$dao->modified_date},{$dao->status_id},{$dao->start_date},{$dao->end_date},{$dao->label})";
+                VALUES ('{$dao->case_id}','{$dao->modified_date}','{$dao->status_id}','{$dao->start_date}','{$dao->end_date}','{$dao->label}')";
           CRM_Core_DAO::executeQuery($sql);
           continue;
         }
