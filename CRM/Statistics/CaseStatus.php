@@ -23,7 +23,7 @@ LEFT JOIN
 ON cov.value = lcc.status_id
 LEFT JOIN civicrm_case_contact ccc ON cc.id = ccc.case_id
 LEFT JOIN civicrm_contact ccon ON ccc.contact_id = ccon.id
-ORDER BY cc.id ASC,lcc.modified_date ASC";
+ORDER BY cc.id ASC";
 
     $dao = CRM_Core_DAO::executeQuery($sqlSourceData);
 
@@ -61,9 +61,6 @@ ORDER BY cc.id ASC,lcc.modified_date ASC";
       }
       if ($caseStatus['current'] !== $caseStatus['previous']) {
         if ($caseID['current'] === $caseID['previous']) {
-          if ($caseModified['current'] === $caseModified['previous']) {
-            continue;
-          }
           // New status for current case
           $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
                   VALUES (%1, %2, %3, %4, %5, %6)";
