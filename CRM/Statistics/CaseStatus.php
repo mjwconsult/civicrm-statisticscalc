@@ -23,6 +23,7 @@ LEFT JOIN
 ON cov.value = lcc.status_id
 LEFT JOIN civicrm_case_contact ccc ON cc.id = ccc.case_id
 LEFT JOIN civicrm_contact ccon ON ccc.contact_id = ccon.id
+WHERE ccon.is_deleted = 0
 ORDER BY cc.id ASC";
 
     $dao = CRM_Core_DAO::executeQuery($sqlSourceData);
@@ -30,12 +31,7 @@ ORDER BY cc.id ASC";
     $caseStatus = ['current' => NULL, 'previous' => NULL];
     $caseID = ['current' => NULL, 'previous' => NULL];
     $caseModified = ['current' => NULL, 'previous' => NULL];
-    $count = 0;
     while ($dao->fetch()) {
-      $count++;
-      if ($count > 1000) {
-        return;
-      }
       $caseID['previous'] = $caseID['current'];
       $caseStatus['previous'] = $caseStatus['current'];
       $caseModified['previous'] = $caseModified['current'];
@@ -46,24 +42,27 @@ ORDER BY cc.id ASC";
 
       $queryParams = [
         1 => [$dao->case_id, 'Integer'],
-        2 => [CRM_Utils_Date::isoToMysql($dao->modified_date), 'Timestamp'],
-        3 => [$dao->status_id, 'Integer'],
-        4 => [CRM_Utils_Date::isoToMysql($dao->start_date), 'Date'],
-        5 => [CRM_Utils_Date::isoToMysql($dao->end_date), 'Date'],
-        6 => [$dao->label, 'String'],
+        2 => [CRM_Utils_Date::isoToMysql($caseModified['previous']), 'Timestamp'],
+        3 => [CRM_Utils_Date::isoToMysql($caseModified['current']), 'Timestamp'],
+        4 => [$dao->status_id, 'Integer'],
+        5 => [CRM_Utils_Date::isoToMysql($dao->start_date), 'Date'],
+        6 => [CRM_Utils_Date::isoToMysql($dao->end_date), 'Date'],
+        7 => [$dao->label, 'String'],
       ];
       if ($caseID['current'] !== $caseID['previous']) {
+        $caseModified['current'] = $dao->start_date;
+        $queryParams[3] = $caseModified['current'];
         // New case to record status
-        $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
-                VALUES (%1, %2, %3, %4, %5, %6)";
+        $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,status_startdate,status_enddate,status_id,start_date,end_date,label)
+                VALUES (%1, %2, %3, %4, %5, %6, %7)";
         CRM_Core_DAO::executeQuery($sql, $queryParams);
         continue;
       }
       if ($caseStatus['current'] !== $caseStatus['previous']) {
         if ($caseID['current'] === $caseID['previous']) {
           // New status for current case
-          $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,modified_date,status_id,start_date,end_date,label)
-                  VALUES (%1, %2, %3, %4, %5, %6)";
+          $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,status_startdate,status_enddate,status_id,start_date,end_date,label)
+                  VALUES (%1, %2, %3, %4, %5, %6, %7)";
           CRM_Core_DAO::executeQuery($sql, $queryParams);
           continue;
         }
@@ -79,7 +78,8 @@ ORDER BY cc.id ASC";
     $sqlSourceCreate = "CREATE TABLE `civicrm_statistics_casestatus` (
         `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
         `case_id` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Unique Case ID',
-        `modified_date` timestamp NULL DEFAULT NULL COMMENT 'When was the case (or closely related entity) was created or modified or deleted.',
+        `status_startdate` timestamp NULL DEFAULT NULL COMMENT 'When was the case (or closely related entity) was created or modified or deleted.',
+        `status_enddate` timestamp NULL DEFAULT NULL COMMENT 'When was the case (or closely related entity) was created or modified or deleted.',
         `status_id` int(10) unsigned DEFAULT NULL COMMENT 'Id of case status.',
         `start_date` date DEFAULT NULL COMMENT 'Date on which given case starts.',
         `end_date` date DEFAULT NULL COMMENT 'Date on which given case ends.',
@@ -132,6 +132,9 @@ ORDER BY cc.id ASC";
       if ($currentCaseID !== $previousCaseID) {
         if ($previousCaseID !== 0) {
           // We are calculating for a new case, record the previous case status
+          if ($status === 6) {
+            Civi::log()->debug($currentCaseID);
+          }
           $statuses = self::updateStatusCounts($statuses, $status, $date, new DateTime($dao->start_date));
         }
         // Start calculations for a new case.
@@ -145,6 +148,9 @@ ORDER BY cc.id ASC";
           $status = $dao->status_id;
         }
       }
+    }
+    if ($status === 6) {
+      Civi::log()->debug($currentCaseID . 'X');
     }
     $statuses = self::updateStatusCounts($statuses, $status, $date, new DateTime($dao->start_date));
 
