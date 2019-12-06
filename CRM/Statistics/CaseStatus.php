@@ -132,9 +132,6 @@ ORDER BY cc.id ASC";
       if ($currentCaseID !== $previousCaseID) {
         if ($previousCaseID !== 0) {
           // We are calculating for a new case, record the previous case status
-          if ($status === 6) {
-            Civi::log()->debug($currentCaseID);
-          }
           $statuses = self::updateStatusCounts($statuses, $status, $date, new DateTime($dao->start_date));
         }
         // Start calculations for a new case.
@@ -148,9 +145,6 @@ ORDER BY cc.id ASC";
           $status = $dao->status_id;
         }
       }
-    }
-    if ($status === 6) {
-      Civi::log()->debug($currentCaseID . 'X');
     }
     $statuses = self::updateStatusCounts($statuses, $status, $date, new DateTime($dao->start_date));
 
