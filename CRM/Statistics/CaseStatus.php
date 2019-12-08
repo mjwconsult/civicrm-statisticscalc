@@ -23,12 +23,12 @@ LEFT JOIN
 ON cov.value = lcc.status_id
 LEFT JOIN civicrm_case_contact ccc ON cc.id = ccc.case_id
 LEFT JOIN civicrm_contact ccon ON ccc.contact_id = ccon.id
-WHERE ccon.is_deleted = 0";
+WHERE ccon.is_deleted = 0 ";
 
     // For performance, each time this query is run, only process new log entries (if you need to reprocess, truncate the table first).
     $statusEndDate = CRM_Core_DAO::singleValueQuery("SELECT MAX(status_enddate) FROM civicrm_statistics_casestatus");
     if ($statusEndDate) {
-      $sqlSourceData .= " AND lcc.modified_date > '{$statusEndDate}'";
+      $sqlSourceData .= "AND lcc.modified_date > '{$statusEndDate}' ";
     }
 
     $sqlSourceData .= "ORDER BY cc.id ASC";
