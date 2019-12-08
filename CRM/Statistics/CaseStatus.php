@@ -166,11 +166,12 @@ WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
     }
     $statuses = self::updateStatusCounts($statuses, $status, $date, new DateTime($dao->start_date));
 
-    $sqlDelete = "DELETE FROM civicrm_statistics_casestatus_daily WHERE date=" . $date->format('Y-m-d');
-    CRM_Core_DAO::executeQuery($sqlDelete);
+    $sqlDelete = "DELETE FROM civicrm_statistics_casestatus_daily WHERE date=%1";
+    $sqlQueryParams = [ 1 => [$date->format('Ymd'), 'Date']];
+    CRM_Core_DAO::executeQuery($sqlDelete, $sqlQueryParams);
     $sqlInsert = "INSERT INTO civicrm_statistics_casestatus_daily (date, status_" . implode(', status_', array_keys($statuses)) . ") ";
-    $sqlInsert .= "VALUES ('" . $date->format('Y-m-d') . "', " . implode(',', $statuses) . ")";
-    CRM_Core_DAO::executeQuery($sqlInsert);
+    $sqlInsert .= "VALUES (%1, " . implode(',', $statuses) . ")";
+    CRM_Core_DAO::executeQuery($sqlInsert, $sqlQueryParams);
     return $statuses;
   }
 
