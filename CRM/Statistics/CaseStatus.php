@@ -116,14 +116,18 @@ WHERE ccon.is_deleted = 0 ";
 
   public static function getStartDateForStatusCounts(): DateTime {
     $startDate = CRM_Core_DAO::singleValueQuery("SELECT min(start_date) FROM civicrm_statistics_casestatus");
-    $startDate = new DateTime($startDate);
-    return $startDate;
+    if (!empty($startDate)) {
+      return new DateTime($startDate);
+    }
+    return NULL;
   }
 
   public static function getLastDateForStatusCounts(): DateTime {
     $date = CRM_Core_DAO::singleValueQuery("SELECT MAX(date) FROM civicrm_statistics_casestatus_daily");
-    $date = new DateTime($date);
-    return $date;
+    if (!empty($date)) {
+      return new DateTime($date);
+    }
+    return NULL;
   }
 
   public static function updateStatusCountsForDate(DateTime $date): array {
