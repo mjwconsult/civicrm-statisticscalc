@@ -45,7 +45,8 @@ function civicrm_api3_case_statistics_Calculate_Dailystatus($params) {
   }
   $lastDate->setTime(0,0,0);
 
-  if (!empty($params['backfill'])) {
+  // If we are backfilling, or we have no existing data
+  if (!empty($params['backfill']) || !$startDate) {
     $startDate = CRM_Statistics_CaseStatus::getStartDateForStatusCounts();
   }
   while ($lastDate >= $startDate) {
