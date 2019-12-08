@@ -138,10 +138,11 @@ ORDER BY cc.id ASC";
         $status = (int) $dao->status_id;
       }
       else {
-        $modifiedDate = new DateTime($dao->modified_date);
-        $modifiedDate->setTime(0,0,0);
-        // Continue with calculations for existing case.
-        if ($modifiedDate < $date) {
+        $startDateForStatus = new DateTime($dao->status_startdate);
+        $startDateForStatus->setTime(0,0,0);
+        // Check if the start date for this status was BEFORE the date we are calculating for.
+        // This check will run for every record and end up with the LATEST status for the date
+        if ($startDateForStatus < $date) {
           $status = $dao->status_id;
         }
       }
