@@ -34,12 +34,19 @@ function civicrm_api3_case_statistics_Calculate_Dailystatus($params) {
 
   if (!empty($params['date'])) {
     $lastDate = new DateTime($params['date']);
+    $startDate = clone $lastDate;
   }
   else {
     $lastDate = new DateTime('now');
+    // By default if no params are specified we calculate all missing days from the last day that was calculated.
+    $dateOfLastCalc = CRM_Statistics_CaseStatus::getLastDateForStatusCounts();
+    if (!empty($dateOfLastCalc)) {
+      $startDate = new DateTime($dateOfLastCalc);
+      $startDate->modify(new DateInterval('P1D'));
+    }
   }
   $lastDate->setTime(0,0,0);
-  $startDate = clone $lastDate;
+
   if (!empty($params['backfill'])) {
     $startDate = CRM_Statistics_CaseStatus::getStartDateForStatusCounts();
   }
