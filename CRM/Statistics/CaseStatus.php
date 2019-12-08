@@ -51,7 +51,7 @@ ORDER BY cc.id ASC";
       ];
       if ($caseID['current'] !== $caseID['previous']) {
         $caseModified['current'] = $dao->start_date;
-        $queryParams[3] = $caseModified['current'];
+        $queryParams[2] = [CRM_Utils_Date::isoToMysql($caseModified['current']), 'Timestamp'];
         // New case to record status
         $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,status_startdate,status_enddate,status_id,start_date,end_date,label)
                 VALUES (%1, %2, %3, %4, %5, %6, %7)";
@@ -123,14 +123,14 @@ ORDER BY cc.id ASC";
 
     $sql = "SELECT * FROM civicrm_statistics_casestatus";
     $dao = CRM_Core_DAO::executeQuery($sql);
-    $currentCaseID = $previousCaseID = 0;
+    $currentCaseID = $previousCaseID = $status = NULL;
 
     while ($dao->fetch()) {
       $previousCaseID = $currentCaseID;
       $currentCaseID = (int) $dao->case_id;
 
       if ($currentCaseID !== $previousCaseID) {
-        if ($previousCaseID !== 0) {
+        if ($previousCaseID !== NULL) {
           // We are calculating for a new case, record the previous case status
           $statuses = self::updateStatusCounts($statuses, $status, $date, new DateTime($dao->start_date));
         }
