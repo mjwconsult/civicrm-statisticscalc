@@ -114,12 +114,15 @@ WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
     CRM_Core_DAO::executeQuery($sql);
   }
 
-  public static function getStartDateForStatusCounts(): ?DateTime {
+  public static function getStartDateForStatusCounts(): DateTime {
     $startDate = CRM_Core_DAO::singleValueQuery("SELECT min(start_date) FROM civicrm_statistics_casestatus");
     if (!empty($startDate)) {
       return new DateTime($startDate);
     }
-    return NULL;
+    else {
+      $startDate = CRM_Core_DAO::singleValueQuery("SELECT min(start_date) FROM civicrm_case");
+    }
+    return new DateTime($startDate);
   }
 
   public static function getLastDateForStatusCounts(): ?DateTime {

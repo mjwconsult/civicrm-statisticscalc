@@ -41,6 +41,9 @@ function civicrm_api3_case_statistics_Calculate_Dailystatus($params) {
     $lastDate = new DateTime('now');
     // By default if no params are specified we calculate all missing days from the last day that was calculated.
     $startDate = CRM_Statistics_CaseStatus::getLastDateForStatusCounts();
+    if (!$startDate) {
+      $startDate = CRM_Statistics_CaseStatus::getStartDateForStatusCounts();
+    }
     $startDate->modify(new DateInterval('P1D'));
   }
   $lastDate->setTime(0,0,0);
