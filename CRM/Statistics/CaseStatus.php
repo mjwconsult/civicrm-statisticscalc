@@ -26,10 +26,11 @@ LEFT JOIN civicrm_contact ccon ON ccc.contact_id = ccon.id
 WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
 
     // For performance, each time this query is run, only process new log entries (if you need to reprocess, truncate the table first).
-    $statusEndDate = CRM_Core_DAO::singleValueQuery("SELECT MAX(status_enddate) FROM civicrm_statistics_casestatus");
+    /*$statusEndDate = CRM_Core_DAO::singleValueQuery("SELECT MAX(status_enddate) FROM civicrm_statistics_casestatus");
     if ($statusEndDate) {
       $sqlSourceData .= "AND lcc.modified_date > '{$statusEndDate}' ";
-    }
+    }*/
+    CRM_Core_DAO::executeQuery('TRUNCATE TABLE civicrm_statistics_casestatus');
 
     $sqlSourceData .= "ORDER BY cc.id ASC";
 
@@ -71,6 +72,10 @@ WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
         $statusStartDate = $caseModified['current'];
         continue;
       }
+    }
+    if (!empty($caseID['current'])) {
+      // Record the final record
+      self::insertIntoCasestatus($caseID['current'], $statusStartDate, NULL, $caseStatus['current'], NULL, NULL, $caseStatusLabel['current']);
     }
   }
 
