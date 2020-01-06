@@ -38,44 +38,55 @@ WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
     $caseStatus = ['current' => NULL, 'previous' => NULL];
     $caseID = ['current' => NULL, 'previous' => NULL];
     $caseModified = ['current' => NULL, 'previous' => NULL];
+    $caseStatusLabel = ['current' => NULL, 'previous' => NULL];
+    $caseChanged = FALSE;
     while ($dao->fetch()) {
       $caseID['previous'] = $caseID['current'];
       $caseStatus['previous'] = $caseStatus['current'];
       $caseModified['previous'] = $caseModified['current'];
+      $caseStatusLabel['previous'] = $caseStatusLabel['current'];
 
       $caseID['current'] = (int) $dao->case_id;
       $caseStatus['current'] = (int) $dao->status_id;
       $caseModified['current'] = $dao->modified_date;
+      $caseStatusLabel['current'] = $dao->label;
 
-      $queryParams = [
-        1 => [$dao->case_id, 'Integer'],
-        2 => [CRM_Utils_Date::isoToMysql($caseModified['previous']), 'Timestamp'],
-        3 => [CRM_Utils_Date::isoToMysql($caseModified['current']), 'Timestamp'],
-        4 => [$dao->status_id, 'Integer'],
-        5 => [CRM_Utils_Date::isoToMysql($dao->start_date), 'Date'],
-        6 => [CRM_Utils_Date::isoToMysql($dao->end_date), 'Date'],
-        7 => [$dao->label, 'String'],
-      ];
+      \Civi::log()->debug("case_id: {$caseID['previous']}:{$caseID['current']} stat: {$caseStatus['previous']}:{$caseStatus['current']} mod: {$caseModified['previous']}:{$caseModified['current']}");
+
       if ($caseID['current'] !== $caseID['previous']) {
-        $caseModified['current'] = $dao->start_date;
-        $queryParams[2] = [CRM_Utils_Date::isoToMysql($caseModified['current']), 'Timestamp'];
-        // New case to record status
-        $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,status_startdate,status_enddate,status_id,start_date,end_date,label)
-                VALUES (%1, %2, %3, %4, %5, %6, %7)";
-        CRM_Core_DAO::executeQuery($sql, $queryParams);
+        \Civi::log()->debug('casechanged');
+        if ($caseID['previous']) {
+          // Record last status of previous case
+          \Civi::log()->debug('recordpreviousstatus');
+          self::insertIntoCasestatus($caseID['previous'], $statusStartDate, NULL, $caseStatus['previous'], NULL, NULL, $caseStatusLabel['previous']);
+        }
+        $statusStartDate = $dao->start_date;
+        // The "first" status change should only be recorded once it changes
+        $caseStatus['previous'] = $caseStatus['current'];
+      }
+      if (($caseStatus['current'] !== $caseStatus['previous'])) {
+        \Civi::log()->debug('statuschanged');
+        // New status for current case
+        self::insertIntoCasestatus($dao->case_id, $statusStartDate, $caseModified['current'], $caseStatus['previous'] ?? $caseStatus['current'], $dao->start_date, $dao->end_date, $caseStatusLabel['previous'] ?? $caseStatusLabel['current']);
+        $statusStartDate = $caseModified['current'];
         continue;
       }
-      if ($caseStatus['current'] !== $caseStatus['previous']) {
-        if ($caseID['current'] === $caseID['previous']) {
-          // New status for current case
-          $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,status_startdate,status_enddate,status_id,start_date,end_date,label)
-                  VALUES (%1, %2, %3, %4, %5, %6, %7)";
-          CRM_Core_DAO::executeQuery($sql, $queryParams);
-          continue;
-        }
-      }
-
     }
+  }
+
+  private static function insertIntoCasestatus($caseID, $statusStartDate, $statusEndDate, $statusID, $startDate, $endDate, $label) {
+    $queryParams = [
+      1 => [$caseID, 'Integer'],
+      2 => [CRM_Utils_Date::isoToMysql($statusStartDate), 'Timestamp'],
+      3 => [CRM_Utils_Date::isoToMysql($statusEndDate), 'Timestamp'],
+      4 => [$statusID, 'Integer'],
+      5 => [CRM_Utils_Date::isoToMysql($startDate), 'Date'],
+      6 => [CRM_Utils_Date::isoToMysql($endDate), 'Date'],
+      7 => [$label, 'String'],
+    ];
+    $sql = "INSERT INTO civicrm_statistics_casestatus (case_id,status_startdate,status_enddate,status_id,start_date,end_date,label)
+                  VALUES (%1, %2, %3, %4, %5, %6, %7)";
+    CRM_Core_DAO::executeQuery($sql, $queryParams);
   }
 
   public static function createSourceTable() {
@@ -134,40 +145,32 @@ WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
   }
 
   public static function updateStatusCountsForDate(DateTime $date): array {
-    // Initialise counts
+    // Get all case statuses and initialise counts
     $caseStatusesSql = "SELECT value FROM civicrm_option_value WHERE option_group_id = (SELECT id FROM civicrm_option_group WHERE name='case_status')";
     $dao = CRM_Core_DAO::executeQuery($caseStatusesSql);
     while ($dao->fetch()) {
       $statuses[$dao->value] = 0;
     }
 
-    $sql = "SELECT * FROM civicrm_statistics_casestatus";
-    $dao = CRM_Core_DAO::executeQuery($sql);
-    $currentCaseID = $previousCaseID = $status = NULL;
+    $sql = '
+SELECT
+	COUNT(*)
+FROM
+	civicrm_statistics_casestatus
+WHERE
+	status_id = %1
+	AND status_startdate < %2
+	AND (status_enddate > %3
+	OR status_enddate IS NULL)';
 
-    while ($dao->fetch()) {
-      $previousCaseID = $currentCaseID;
-      $currentCaseID = (int) $dao->case_id;
-
-      if ($currentCaseID !== $previousCaseID) {
-        if ($previousCaseID !== NULL) {
-          // We are calculating for a new case, record the previous case status
-          $statuses = self::updateStatusCounts($statuses, $status, $date, new DateTime($dao->start_date));
-        }
-        // Start calculations for a new case.
-        $status = (int) $dao->status_id;
-      }
-      else {
-        $startDateForStatus = new DateTime($dao->status_startdate);
-        $startDateForStatus->setTime(0,0,0);
-        // Check if the start date for this status was BEFORE the date we are calculating for.
-        // This check will run for every record and end up with the LATEST status for the date
-        if ($startDateForStatus < $date) {
-          $status = $dao->status_id;
-        }
-      }
+    $queryParams = [
+      2 => [$date->setTime(0,0,0)->format('YmdHis'), 'Timestamp'],
+      3 => [$date->setTime(0,0,0)->format('YmdHis'), 'Timestamp'],
+    ];
+    foreach ($statuses as $statusID => $statusCount) {
+      $queryParams[1] = [$statusID, 'Integer'];
+      $statuses[$statusID] = CRM_Core_DAO::singleValueQuery($sql, $queryParams);
     }
-    $statuses = self::updateStatusCounts($statuses, $status, $date, new DateTime($dao->start_date));
 
     $sqlDelete = "DELETE FROM civicrm_statistics_casestatus_daily WHERE date=%1";
     $sqlQueryParams = [ 1 => [$date->format('Ymd'), 'Date']];
