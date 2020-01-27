@@ -61,7 +61,6 @@ class CRM_Statistics_ActivityNumericalScores {
    * @throws \CiviCRM_API3_Exception
    */
   public static function runCalculations($calculationsMetadata, $activityIds = NULL) {
-    $counts = array();
     foreach ($calculationsMetadata as $activityTypeId => $calculations) {
       $filteredActivityIds = self::getActivityIdsByActivityType($activityTypeId, $activityIds);
       foreach ($filteredActivityIds as $activityId) {
@@ -80,14 +79,17 @@ class CRM_Statistics_ActivityNumericalScores {
           switch ($metadata['mode']) {
             case self::CALC_MODE_INT_SUM:
               $result = self::calculateIntegerSum($activityDetails, $metadata['sourceFields']);
-              if (($result !== NULL) && ($result !== (int) $activityDetails[$metadata['resultField']])) {
+              if (($result !== NULL) && (($metadata['resultEntity'] === 'activity') && ($result !== (int) $activityDetails[$metadata['resultField']]))) {
                 // We only save the result if it's not NULL (ie. some questions have been answered) and it is different from the saved value
                 $resultsToSave=TRUE;
                 $results[$metadata['resultEntity']][$metadata['resultField']] = $result;
+                isset($counts['numberOfChangedCalculations'][$metadata['name']]) ?: $counts['numberOfChangedCalculations'][$metadata['name']] = 0;
                 $counts['numberOfChangedCalculations'][$metadata['name']] += 1;
               }
             break;
           }
+
+          isset($counts['numberOfCalculations'][$metadata['name']]) ?: $counts['numberOfCalculations'][$metadata['name']] = 0;
           $counts['numberOfCalculations'][$metadata['name']] = CRM_Utils_Array::value($metadata['name'], $counts['numberOfCalculations']) + 1;
         }
         if ($resultsToSave) {
@@ -117,7 +119,7 @@ class CRM_Statistics_ActivityNumericalScores {
         }
       }
     }
-    return $counts;
+    return $counts ?? [];
   }
 
   /**
