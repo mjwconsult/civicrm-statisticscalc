@@ -1,5 +1,4 @@
 <?php
-use CRM_TheHarbour_ExtensionUtil as E;
 
 /**
  * CaseStatistics.Calculate_Scores API specification (optional)
@@ -9,7 +8,7 @@ use CRM_TheHarbour_ExtensionUtil as E;
  * @return void
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC/API+Architecture+Standards
  */
-function _civicrm_api3_case_statistics_Calculate_Dailystatus_spec(&$spec) {
+function _civicrm_api3_case_statistics_calculate_dailystatus_spec(&$spec) {
   $spec['date']['api.required'] = 0;
   $spec['date']['title'] = 'The date to calculate for';
   $spec['date']['description'] = 'If not specified, status counts will be calculated for the current day';
@@ -27,7 +26,7 @@ function _civicrm_api3_case_statistics_Calculate_Dailystatus_spec(&$spec) {
  * @see civicrm_api3_create_error
  * @throws \CiviCRM_API3_Exception
  */
-function civicrm_api3_case_statistics_Calculate_Dailystatus($params) {
+function civicrm_api3_case_statistics_calculate_dailystatus($params) {
   CRM_Statistics_CaseStatus::createTargetTable();
   CRM_Statistics_CaseStatus::createSourceTable();
   CRM_Statistics_CaseStatus::createSourceDataForStatusCounts();

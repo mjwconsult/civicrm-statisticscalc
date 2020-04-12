@@ -4,7 +4,7 @@ return [
   0 =>
     [
       'name' => 'Calculate Daily Case Status Totals',
-      'entity' => 'CaseStatistics',
+      'entity' => 'Job',
       'params' =>
         [
           'version' => 3,

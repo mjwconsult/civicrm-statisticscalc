@@ -11,7 +11,7 @@ class CRM_Statistics_ActivityNumericalScores {
    * @return array
    * @throws \CiviCRM_API3_Exception
    */
-  public static function calculate($activityIds = NULL) {
+  public static function calculate($activityIds = []) {
     CRM_Statistics_Utils_Hook::getStatisticsMetadata($metadata);
     $results = [];
     if (!empty($metadata['activity'])) {
@@ -33,19 +33,19 @@ class CRM_Statistics_ActivityNumericalScores {
    * Get all activity IDs for activity type id.  If $activityIds array is specified we use that as a filter
    *   and remove any that are not of the specified activity type.
    *
-   * @param int $activityTypeId The activity Type ID
+   * @param int $activityTypeName The activity Type Name
    * @param array $activityIds Array of valid IDs (if NULL, we retrieve all, if array of IDs we filter those IDs).
    *
    * @return array
    * @throws \CiviCRM_API3_Exception
    */
-  public static function getActivityIdsByActivityType($activityTypeId, $activityIds = NULL) {
-    $activityParams = array(
-      'return' => array("id"),
-      'activity_type_id' => $activityTypeId,
+  public static function getActivityIdsByActivityType($activityTypeName, $activityIds = []) {
+    $activityParams = [
+      'return' => ['id'],
+      'activity_type_id' => $activityTypeName,
       'is_current_revision' => 1,
-      'options' => array('limit' => 0),
-    );
+      'options' => ['limit' => 0],
+    ];
     if (!empty($activityIds)) {
       $activityParams['id'] = ['IN' => $activityIds];
     }
@@ -60,15 +60,16 @@ class CRM_Statistics_ActivityNumericalScores {
    * @return array
    * @throws \CiviCRM_API3_Exception
    */
-  public static function runCalculations($calculationsMetadata, $activityIds = NULL) {
-    foreach ($calculationsMetadata as $activityTypeId => $calculations) {
-      $filteredActivityIds = self::getActivityIdsByActivityType($activityTypeId, $activityIds);
+  public static function runCalculations($calculationsMetadata, $activityIds = []) {
+    foreach ($calculationsMetadata as $activityTypeName => $calculations) {
+      $filteredActivityIds = self::getActivityIdsByActivityType($activityTypeName, $activityIds);
       foreach ($filteredActivityIds as $activityId) {
         // Get the details of the original activity
         $activityDetails = self::getActivityDetailsForCalculations($activityId, $calculations);
 
         // Run through each of the calculations
         $resultsToSave=FALSE;
+        $results = [];
         foreach ($calculations as $index => $metadata) {
           // Subject matching - if we specify a subject in the metadata we can perform different calculations depending on the activity subject
           if (!empty($metadata['subject'])) {
@@ -78,13 +79,35 @@ class CRM_Statistics_ActivityNumericalScores {
           }
           switch ($metadata['mode']) {
             case self::CALC_MODE_INT_SUM:
+              foreach ($metadata['sourceFields'] as $customFieldName) {
+                $customFieldNameParts = explode('.', $customFieldName);
+                if (count($customFieldNameParts) === 2) {
+                  // It's in format case.custom_123
+                  $sourceFieldType = $customFieldNameParts[0];
+                  $sourceFieldName = $customFieldNameParts[1];
+                }
+                else {
+                  // It's just a customfield name so we assume type = activity
+                  $sourceFieldType = 'activity';
+                  $sourceFieldName = $customFieldName;
+                }
+                if (isset($results[$sourceFieldType][$sourceFieldName])) {
+                  $activityDetails["{$sourceFieldType}.{$sourceFieldName}"] = $results[$sourceFieldType][$sourceFieldName];
+                }
+              }
               $result = self::calculateIntegerSum($activityDetails, $metadata['sourceFields']);
-              if (($result !== NULL) && (($metadata['resultEntity'] === 'activity') && ($result !== (int) $activityDetails[$metadata['resultField']]))) {
-                // We only save the result if it's not NULL (ie. some questions have been answered) and it is different from the saved value
-                $resultsToSave=TRUE;
-                $results[$metadata['resultEntity']][$metadata['resultField']] = $result;
-                isset($counts['numberOfChangedCalculations'][$metadata['name']]) ?: $counts['numberOfChangedCalculations'][$metadata['name']] = 0;
-                $counts['numberOfChangedCalculations'][$metadata['name']] += 1;
+              if ($result !== NULL) {
+                // Check if the result matches:
+                // - A supported entity AND
+                // - (result is not set OR result is not equal to existing result)
+                if ((($metadata['resultEntity'] === 'activity') && (!isset($activityDetails[$metadata['resultField']]) || ($result !== (int) $activityDetails[$metadata['resultField']])))
+                   || (($metadata['resultEntity'] === 'case') && (!isset($activityDetails["case_id.{$metadata['resultField']}"]) || ($result !== (int) $activityDetails["case_id.{$metadata['resultField']}"])))) {
+                  // We only save the result if it's not NULL (ie. some questions have been answered) and it is different from the saved value
+                  $resultsToSave = TRUE;
+                  $results[$metadata['resultEntity']][$metadata['resultField']] = $result;
+                  isset($counts['numberOfChangedCalculations'][$metadata['name']]) ?: $counts['numberOfChangedCalculations'][$metadata['name']] = 0;
+                  $counts['numberOfChangedCalculations'][$metadata['name']] += 1;
+                }
               }
             break;
           }
@@ -138,7 +161,16 @@ class CRM_Statistics_ActivityNumericalScores {
       foreach ($metadata['sourceFields'] as $field) {
         $return[] = $field;
       }
-      $return[] = $metadata['resultField'];
+      // Retrieve the result field (joining) depending on the entityType.
+      switch ($metadata['resultEntity']) {
+        case 'activity':
+          $return[] = $metadata['resultField'];
+          break;
+
+        case 'case':
+          $return[] = "case_id.{$metadata['resultField']}";
+          break;
+      }
     }
     $originalActivityParams = [
       'id' => $activityId,
