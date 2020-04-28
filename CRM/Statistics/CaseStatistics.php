@@ -167,4 +167,43 @@ class CRM_Statistics_CaseStatistics {
     return $fields;
   }
 
+  /**
+   * Triggered via symfony event when a case is changed
+   *
+   * @param \Civi\Core\Event\GenericHookEvent $event
+   * @param string $hook
+   */
+  public static function hookCaseChangeCalculateScores($event, $hook) {
+    /* var $event->analyzer = \Civi\CCase\Analyzer */
+    if (empty($event->analyzer->getCaseId())) {
+      return;
+    }
+
+    if (!isset(Civi::$statics[__CLASS__]['hookCaseChangeCalculateScoresCallback'])) {
+      register_shutdown_function(["CRM_Statistics_CaseStatistics", "hookCaseChangeCalculateScoresCallback"]);
+      Civi::$statics[__CLASS__]['hookCaseChangeCalculateScoresCallback'] = TRUE;
+      if (!isset(Civi::$statics[__CLASS__]['generate'][$event->analyzer->getCaseId()])) {
+        Civi::$statics[__CLASS__]['generate'][$event->analyzer->getCaseId()] = [];
+      }
+    }
+  }
+
+  /**
+   * Callback for hookCaseChangeCalculateScores
+   *
+   * @throws \CiviCRM_API3_Exception
+   */
+  public static function hookCaseChangeCalculateScoresCallback() {
+    if (!isset(Civi::$statics[__CLASS__]['generate'])) {
+      return;
+    }
+    foreach (Civi::$statics[__CLASS__]['generate'] as $caseID => $detail) {
+      if (isset(Civi::$statics[__CLASS__]['generate'][$caseID]['handled'])) {
+        continue;
+      }
+      Civi::$statics[__CLASS__]['generate'][$caseID]['handled'] = TRUE;
+      civicrm_api3('CaseStatistics', 'generate', ['case_id' => $caseID]);
+    }
+  }
+
 }

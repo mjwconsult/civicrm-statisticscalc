@@ -18,6 +18,12 @@ use CRM_Statisticscalc_ExtensionUtil as E;
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
  */
 function statisticscalc_civicrm_config(&$config) {
+  if (isset(Civi::$statics[__FUNCTION__])) {
+    return;
+  }
+  Civi::$statics[__FUNCTION__] = 1;
+  Civi::dispatcher()->addListener('hook_civicrm_post', 'CRM_Statistics_ActivityNumericalScores::callbackPostCalculateActivityScores');
+  Civi::dispatcher()->addListener('hook_civicrm_caseChange', 'CRM_Statistics_CaseStatistics::hookCaseChangeCalculateScores');
   _statisticscalc_civix_civicrm_config($config);
 }
 

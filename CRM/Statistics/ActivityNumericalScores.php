@@ -212,44 +212,38 @@ class CRM_Statistics_ActivityNumericalScores {
     return $total;
   }
 
-  public static function callbackCalculateActivityScores($activityId) {
-    civicrm_api3('CaseStatistics', 'calculate_scores', ['activity_id' => $activityId]);
-  }
-
   /**
    * Symfony event handler for hook_civicrm_post for callbackCalculateActivityScores
    *
-   * @param $event
+   * @param \Civi\Core\Event\GenericHookEvent $event
    *
    * @throws \CiviCRM_API3_Exception
    */
   public static function callbackPostCalculateActivityScores($event) {
-    $params = $event->getHookValues();
-    if (count($params) < 4) {
-      return;
-    }
-    $hookParams = [
-      'op' => $params[0],
-      'entity' => $params[1],
-      'id' => $params[2],
-      'object' => $params[3],
-    ];
-
-    if ($hookParams['entity'] !== 'Activity') {
+    if ($event->entity !== 'Activity') {
       return;
     }
 
     $validActions = ['create', 'edit'];
-    if (!in_array($hookParams['op'], $validActions)) {
+    if (!in_array($event->action, $validActions)) {
       return;
     }
 
     if (CRM_Core_Transaction::isActive()) {
-      CRM_Core_Transaction::addCallback(CRM_Core_Transaction::PHASE_POST_COMMIT, 'CRM_Statistics_ActivityNumericalScores::callbackCalculateActivityScores', [$hookParams['id']]);
+      CRM_Core_Transaction::addCallback(CRM_Core_Transaction::PHASE_POST_COMMIT, 'CRM_Statistics_ActivityNumericalScores::callbackCalculateActivityScores', [$event->id]);
     }
     else {
-      CRM_Statistics_ActivityNumericalScores::callbackCalculateActivityScores($hookParams['id']);
+      CRM_Statistics_ActivityNumericalScores::callbackCalculateActivityScores($event->id);
     }
+  }
+
+  /**
+   * @param int $activityId
+   *
+   * @throws \CiviCRM_API3_Exception
+   */
+  public static function callbackCalculateActivityScores($activityId) {
+    civicrm_api3('CaseStatistics', 'calculate_scores', ['activity_id' => $activityId]);
   }
 
 }
