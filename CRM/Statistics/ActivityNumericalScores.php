@@ -58,7 +58,13 @@ class CRM_Statistics_ActivityNumericalScores {
     if (!empty($activityIds)) {
       $activityParams['id'] = ['IN' => $activityIds];
     }
-    $activityIdsResult = civicrm_api3('Activity', 'get', $activityParams);
+    try {
+      $activityIdsResult = civicrm_api3('Activity', 'get', $activityParams);
+    }
+    catch (Exception $e) {
+      \Civi::log()->error(__CLASS__ . '::' . __FUNCTION__ . ' ' . $e->getMessage());
+      return [];
+    }
     return array_keys($activityIdsResult['values']);
   }
 

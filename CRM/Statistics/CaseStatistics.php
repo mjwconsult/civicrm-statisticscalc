@@ -13,6 +13,13 @@ use CRM_Statisticscalc_ExtensionUtil as E;
 
 class CRM_Statistics_CaseStatistics {
 
+  /**
+   * @param array $entityIDs
+   *
+   * @return array
+   * @throws \CRM_Core_Exception
+   * @throws \CiviCRM_API3_Exception
+   */
   public static function calculate($entityIDs) {
     CRM_Statistics_Utils_Hook::getStatisticsMetadata($metadata);
     $results = [];
@@ -105,7 +112,7 @@ class CRM_Statistics_CaseStatistics {
    * Returns an array of fields with values copied from another field
    *
    * @param int $caseId
-   * @param array $activityTypeIds Array describing what to return
+   * @param array $activityTypesField Array describing what to return
    * activityTypeName => [
    *   caseCustomFieldName => activityCustomField
    * ]
@@ -135,14 +142,20 @@ class CRM_Statistics_CaseStatistics {
         // This should only happen in a test environment, but we don't want to process if we don't have an ID
         continue;
       }
-      $activities = civicrm_api3('Activity', 'get', [
-        'return' => $activityFieldsToReturn,
-        'activity_type_id' => $activityTypeName,
-        'is_current_revision' => 1,
-        'is_deleted' => 0,
-        'case_id' => $caseId,
-        'options' => ['sort' => "id DESC", 'limit' => 1],
-      ])['values'];
+      try {
+        $activities = civicrm_api3('Activity', 'get', [
+          'return' => $activityFieldsToReturn,
+          'activity_type_id' => $activityTypeName,
+          'is_current_revision' => 1,
+          'is_deleted' => 0,
+          'case_id' => $caseId,
+          'options' => ['sort' => "id DESC", 'limit' => 1],
+        ])['values'];
+      }
+      catch (Exception $e) {
+        \Civi::log()->error(__CLASS__ . '::' . __FUNCTION__ . ' ' . $e->getMessage());
+        continue;
+      }
 
       if (!empty($activities)) {
         $activities = reset($activities);
