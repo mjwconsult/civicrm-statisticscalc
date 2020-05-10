@@ -138,7 +138,7 @@ class CRM_Statistics_ActivityNumericalScores {
             switch ($entityName) {
               case 'case':
                 if (empty($activityDetails['case_id'])) {
-                  continue;
+                  continue 2;
                 }
                 $entityResults['id'] = CRM_Utils_Array::first($activityDetails['case_id']);
                 break;
