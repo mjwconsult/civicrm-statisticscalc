@@ -53,7 +53,9 @@ class CRM_Statistics_CaseStatistics {
 
           foreach ($caseParamsByName as $caseCustomFieldName => $caseCustomFieldValue) {
             $customFieldParts = explode('.', $caseCustomFieldName);
-            $caseParams[CRM_Statistics_Utils::getCustomByName($customFieldParts[1], $customFieldParts[0], TRUE)] = $caseCustomFieldValue;
+            // Convert NULL to string 'null' for API3 to save as NULL
+            $caseParams[CRM_Statistics_Utils::getCustomByName($customFieldParts[1], $customFieldParts[0], TRUE)]
+              = ($caseCustomFieldValue ?? 'null');
           }
 
           $caseParams['id'] = $entityID;
@@ -157,11 +159,10 @@ class CRM_Statistics_CaseStatistics {
         continue;
       }
 
-      if (!empty($activities)) {
-        $activities = reset($activities);
-        foreach ($fieldMap as $caseFieldName => $activityFieldName) {
-          $fields[$caseFieldName] = $activities[$activityFieldName];
-        }
+      // If we have values for the activity set them. Otherwise return NULL for those fields
+      $activities = reset($activities);
+      foreach ($fieldMap as $caseFieldName => $activityFieldName) {
+        $fields[$caseFieldName] = $activities[$activityFieldName] ?? NULL;
       }
     }
     return $fields;

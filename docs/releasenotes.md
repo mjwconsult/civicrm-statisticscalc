@@ -9,6 +9,10 @@ Where:
 * minor: Breaking change in some circumstances, or a new feature. Read carefully and make sure you understand the impact of the change.
 * incremental: A "safe" change / improvement. Should *always* be safe to upgrade.
 
+## Release 1.2
+
+* Fix issue where case statistics were not reset to NULL if no value was found.
+
 ## Release 1.1
 
 * Add hook_civicrm_post and hook_civicrm_caseChange listeners for activity/case score calculations

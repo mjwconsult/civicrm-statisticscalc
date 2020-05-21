@@ -21,7 +21,7 @@ You have to implement the hook:
 /**
  * Implements hook_civicrm_statistics_metadata()
  */
-function the_harbour_civicrm_statistics_metadata(&$metadata) {
+function thesite_civicrm_statistics_metadata(&$metadata) {
   $metadata['activity'][] = [
     'class' => 'CRM_TheSite_StatisticsMetadata',
     'method' => 'getActivityCalculationMetadata',
