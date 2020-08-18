@@ -120,7 +120,7 @@ class CRM_Statistics_ActivityNumericalScores {
                   // We only save the result if it's not NULL (ie. some questions have been answered) and it is different from the saved value
                   $resultsToSave = TRUE;
                   $results[$metadata['resultEntity']][$metadata['resultField']] = $result;
-                  isset($counts['numberOfChangedCalculations'][$metadata['name']]) ?: $counts['numberOfChangedCalculations'][$metadata['name']] = 0;
+                  $counts['numberOfChangedCalculations'][$metadata['name']] ?? $counts['numberOfChangedCalculations'][$metadata['name']] = 0;
                   $counts['numberOfChangedCalculations'][$metadata['name']] += 1;
                 }
               }
@@ -183,7 +183,7 @@ class CRM_Statistics_ActivityNumericalScores {
           break;
 
         case 'case':
-          $return[] = "case_id.{$metadata['resultField']}";
+          $return[] = "case.{$metadata['resultField']}";
           break;
       }
     }

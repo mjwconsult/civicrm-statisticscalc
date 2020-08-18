@@ -20,7 +20,7 @@
 function _civicrm_api3_case_statistics_calculate_scores_spec(&$spec) {
   $spec['activity_id']['api.required'] = 0;
   $spec['activity_id']['title'] = 'The Activity ID';
-  $spec['activity_id']['description'] = 'Accepts multiple IDs as array. If not specified, scores will be calculated for all activities';
+  $spec['activity_id']['description'] = 'Accepts multiple IDs as array or comma separated list. If not specified, scores will be calculated for all activities';
 }
 
 /**
@@ -37,7 +37,10 @@ function civicrm_api3_case_statistics_calculate_scores($params) {
     if (isset($params['activity_id']['IN'])) {
       $params['activity_id'] = $params['activity_id']['IN'];
     }
-    if (!is_array($params['activity_id'])) {
+    elseif (strpos($params['activity_id'], ',') !== FALSE) {
+      $params['activity_id'] = explode(',', $params['activity_id']);
+    }
+    elseif (!is_array($params['activity_id'])) {
       $params['activity_id'] = [$params['activity_id']];
     }
     $result = CRM_Statistics_ActivityNumericalScores::calculate($params['activity_id']);
