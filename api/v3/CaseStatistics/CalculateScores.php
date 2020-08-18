@@ -43,9 +43,10 @@ function civicrm_api3_case_statistics_calculate_scores($params) {
     elseif (!is_array($params['activity_id'])) {
       $params['activity_id'] = [$params['activity_id']];
     }
-    $result = CRM_Statistics_ActivityNumericalScores::calculate($params['activity_id']);
+    $result = CRM_Statistics_ActivityNumericalScores::calculate($params['activity_id'], []);
     return civicrm_api3_create_success(array($result), $params, 'CaseStatistics', 'Calculate_Scores');
   }
-  $result = CRM_Statistics_ActivityNumericalScores::calculate();
+  $options = $params['options'] ?? ['limit' => 0];
+  $result = CRM_Statistics_ActivityNumericalScores::calculate([], $options);
   return civicrm_api3_create_success(array($result), $params, 'CaseStatistics', 'Calculate_Scores');
 }

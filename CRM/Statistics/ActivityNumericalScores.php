@@ -15,12 +15,14 @@ class CRM_Statistics_ActivityNumericalScores {
   /**
    * Calculate the scores
    *
-   * @param int|array|null $activityIds
+   * @param array $activityIds
+   * @param array $options
+   *   limit and offset per API3
    *
    * @return array
    * @throws \CiviCRM_API3_Exception
    */
-  public static function calculate($activityIds = []) {
+  public static function calculate($activityIds, $options) {
     CRM_Statistics_Utils_Hook::getStatisticsMetadata($metadata);
     $results = [];
     if (!empty($metadata['activity'])) {
@@ -32,7 +34,7 @@ class CRM_Statistics_ActivityNumericalScores {
           continue;
         }
         $statisticsMetadata = call_user_func([$activityCalculations['class'], $activityCalculations['method']]);
-        $results[] = self::runCalculations($statisticsMetadata, $activityIds);
+        $results[] = self::runCalculations($statisticsMetadata, $activityIds, $options);
       }
     }
     return $results;
@@ -44,16 +46,17 @@ class CRM_Statistics_ActivityNumericalScores {
    *
    * @param int $activityTypeName The activity Type Name
    * @param array $activityIds Array of valid IDs (if NULL, we retrieve all, if array of IDs we filter those IDs).
+   * @param array $options
    *
    * @return array
    * @throws \CiviCRM_API3_Exception
    */
-  public static function getActivityIdsByActivityType($activityTypeName, $activityIds = []) {
+  public static function getActivityIdsByActivityType($activityTypeName, $activityIds = [], $options) {
     $activityParams = [
       'return' => ['id'],
       'activity_type_id' => $activityTypeName,
       'is_current_revision' => 1,
-      'options' => ['limit' => 0],
+      'options' => $options,
     ];
     if (!empty($activityIds)) {
       $activityParams['id'] = ['IN' => $activityIds];
@@ -70,14 +73,15 @@ class CRM_Statistics_ActivityNumericalScores {
 
   /**
    * @param $calculationsMetadata
-   * @param null $activityIds
+   * @param array $activityIds
+   * @param array $options
    *
    * @return array
    * @throws \CiviCRM_API3_Exception
    */
-  public static function runCalculations($calculationsMetadata, $activityIds = []) {
+  public static function runCalculations($calculationsMetadata, $activityIds = [], $options) {
     foreach ($calculationsMetadata as $activityTypeName => $calculations) {
-      $filteredActivityIds = self::getActivityIdsByActivityType($activityTypeName, $activityIds);
+      $filteredActivityIds = self::getActivityIdsByActivityType($activityTypeName, $activityIds, $options);
       foreach ($filteredActivityIds as $activityId) {
         // Get the details of the original activity
         $activityDetails = self::getActivityDetailsForCalculations($activityId, $calculations);
