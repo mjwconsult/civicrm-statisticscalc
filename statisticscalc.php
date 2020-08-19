@@ -121,3 +121,19 @@ function statisticscalc_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 function statisticscalc_civicrm_entityTypes(&$entityTypes) {
   _statisticscalc_civix_civicrm_entityTypes($entityTypes);
 }
+
+/**
+ * Implements hook_civicrm_alterLogTables().
+ *
+ * Exclude firewall tables from logging tables since they hold mostly temp data.
+ */
+function statisticscalc_civicrm_alterLogTables(&$logTableSpec) {
+  $tablePrefix = 'civicrm_statistics_';
+  $len = strlen($tablePrefix);
+
+  foreach ($logTableSpec as $key => $val) {
+    if (substr($key, 0, $len) === $tablePrefix) {
+      unset($logTableSpec[$key]);
+    }
+  }
+}
