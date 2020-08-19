@@ -9,6 +9,10 @@ Where:
 * minor: Breaking change in some circumstances, or a new feature. Read carefully and make sure you understand the impact of the change.
 * incremental: A "safe" change / improvement. Should *always* be safe to upgrade.
 
+## Release 1.4
+
+* Exclude `civicrm_statistics_*` tables from logging.
+
 ## Release 1.3
 
 * Fix activity calculations with case source fields.
