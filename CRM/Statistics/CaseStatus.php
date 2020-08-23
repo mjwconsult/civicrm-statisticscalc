@@ -61,13 +61,9 @@ WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
       $caseModified['current'] = $dao->modified_date;
       $caseStatusLabel['current'] = $dao->label;
 
-      \Civi::log()->debug("case_id: {$caseID['previous']}:{$caseID['current']} stat: {$caseStatus['previous']}:{$caseStatus['current']} mod: {$caseModified['previous']}:{$caseModified['current']}");
-
       if ($caseID['current'] !== $caseID['previous']) {
-        \Civi::log()->debug('casechanged');
         if ($caseID['previous']) {
           // Record last status of previous case
-          \Civi::log()->debug('recordpreviousstatus');
           self::insertIntoCasestatus($caseID['previous'], $statusStartDate, NULL, $caseStatus['previous'], NULL, NULL, $caseStatusLabel['previous']);
         }
         $statusStartDate = $dao->start_date;
@@ -75,7 +71,6 @@ WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
         $caseStatus['previous'] = $caseStatus['current'];
       }
       if (($caseStatus['current'] !== $caseStatus['previous'])) {
-        \Civi::log()->debug('statuschanged');
         // New status for current case
         self::insertIntoCasestatus($dao->case_id, $statusStartDate, $caseModified['current'], $caseStatus['previous'] ?? $caseStatus['current'], $dao->start_date, $dao->end_date, $caseStatusLabel['previous'] ?? $caseStatusLabel['current']);
         $statusStartDate = $caseModified['current'];
@@ -168,14 +163,14 @@ WHERE ccon.is_deleted = 0 AND cc.is_deleted = 0 ";
 
     $sql = '
 SELECT
-	COUNT(*)
+  COUNT(*)
 FROM
-	civicrm_statistics_casestatus
+  civicrm_statistics_casestatus
 WHERE
-	status_id = %1
-	AND status_startdate < %2
-	AND (status_enddate > %3
-	OR status_enddate IS NULL)';
+  status_id = %1
+  AND status_startdate < %2
+  AND (status_enddate > %3
+  OR status_enddate IS NULL)';
 
     $queryParams = [
       2 => [$date->setTime(0,0,0)->format('YmdHis'), 'Timestamp'],
@@ -193,14 +188,6 @@ WHERE
     $sqlInsert .= "VALUES (%1, " . implode(',', $statuses) . ")";
     CRM_Core_DAO::executeQuery($sqlInsert, $sqlQueryParams);
     return $statuses;
-  }
-
-  private static function updateStatusCounts(array $counts, int $status, DateTime $calculationDate, DateTime $caseStartDate) {
-    if ($caseStartDate <= $calculationDate) {
-      // But only if the start_date of the previous case was before the date we are calculating stats for
-      $counts[$status]++;
-    }
-    return $counts;
   }
 
 }

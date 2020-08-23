@@ -24,6 +24,12 @@ function _civicrm_api3_case_statistics_calculate_dailystatus_spec(&$spec) {
   $spec['date']['type'] = CRM_Utils_Type::T_DATE;
   $spec['backfill']['title'] = 'Recalculate all dates';
   $spec['backfill']['type'] = CRM_Utils_Type::T_BOOLEAN;
+  $spec['generate_source_data']['title'] = 'Generate source data';
+  $spec['generate_source_data']['type'] = CRM_Utils_Type::T_BOOLEAN;
+  $spec['generate_source_data']['api.default'] = TRUE;
+  $spec['calculate_daily_counts']['title'] = 'Calculate daily counts data';
+  $spec['calculate_daily_counts']['type'] = CRM_Utils_Type::T_BOOLEAN;
+  $spec['calculate_daily_counts']['api.default'] = TRUE;
 }
 
 /**
@@ -36,9 +42,15 @@ function _civicrm_api3_case_statistics_calculate_dailystatus_spec(&$spec) {
  * @throws \CiviCRM_API3_Exception
  */
 function civicrm_api3_case_statistics_calculate_dailystatus($params) {
-  CRM_Statistics_CaseStatus::createTargetTable();
-  CRM_Statistics_CaseStatus::createSourceTable();
-  CRM_Statistics_CaseStatus::createSourceDataForStatusCounts();
+  if ($params['generate_source_data']) {
+    CRM_Statistics_CaseStatus::createTargetTable();
+    CRM_Statistics_CaseStatus::createSourceTable();
+    CRM_Statistics_CaseStatus::createSourceDataForStatusCounts();
+  }
+
+  if (!$params['calculate_daily_counts']) {
+    return civicrm_api3_create_success([], $params, 'CaseStatistics', 'CalculateDailystatus');
+  }
 
   $startDate = NULL;
   if (!empty($params['date'])) {
