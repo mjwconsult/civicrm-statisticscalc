@@ -162,7 +162,11 @@ class CRM_Statistics_CaseStatistics {
       // If we have values for the activity set them. Otherwise return NULL for those fields
       $activities = reset($activities);
       foreach ($fieldMap as $caseFieldName => $activityFieldName) {
-        $fields[$caseFieldName] = $activities[$activityFieldName] ?? NULL;
+        // It is possible to have multiple source fields mapping to the same target field.
+        // For example you might have two different activities collecting the same data but you only use one of them on each case.
+        // This will always overwrite with the value of the "latest" activity type based on the order of the list of metadata
+        // If the latest activity has no value the earlier activity value will be used if it has a value.
+        $fields[$caseFieldName] = $activities[$activityFieldName] ?? $fields[$caseFieldName] ?? NULL;
       }
     }
     return $fields;
