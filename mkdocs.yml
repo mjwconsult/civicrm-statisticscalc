@@ -1,0 +1,20 @@
+site_name: Statistics Calc
+repo_url: https://github.com/mattwire/civicrm-statisticscalc
+theme:
+  name: material
+markdown_extensions:
+  - attr_list
+  - admonition
+  - def_list
+  - codehilite
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.tilde
+  - pymdownx.betterem
+  - pymdownx.mark
+
+nav:
+- Overview: index.md
+- Release Notes: releasenotes.md

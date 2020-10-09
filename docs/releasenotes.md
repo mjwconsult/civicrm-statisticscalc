@@ -3,11 +3,17 @@
 Releases use the following numbering system:
 **{major}.{minor}.{incremental}**
 
-Where:
-
 * major: Major refactoring or rewrite - make sure you read and test very carefully!
 * minor: Breaking change in some circumstances, or a new feature. Read carefully and make sure you understand the impact of the change.
 * incremental: A "safe" change / improvement. Should *always* be safe to upgrade.
+
+* **[BC]**: Items marked with [BC] indicate a breaking change that will require updates to your code if you are using that code in your extension.
+
+## Release 1.5
+
+* Add parameters to calculatedailystatus job.
+* Update hook definition.
+* Fix overwriting of result fields with NULL if multiple activities are defined with the same result field.
 
 ## Release 1.4
 
