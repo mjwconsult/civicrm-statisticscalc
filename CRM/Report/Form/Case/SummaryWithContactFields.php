@@ -20,7 +20,7 @@ class CRM_Report_Form_Case_SummaryWithContactFields extends CRM_Report_Form {
   protected $_summary = NULL;
   protected $_exposeContactID = TRUE;
 
-  protected $_customGroupExtends = ['Case'];
+  protected $_customGroupExtends = ['Case', 'Contact'];
 
   /**
    * Class constructor.
