@@ -9,6 +9,10 @@ Releases use the following numbering system:
 
 * **[BC]**: Items marked with [BC] indicate a breaking change that will require updates to your code if you are using that code in your extension.
 
+## Release 1.7
+
+* Add "Case Detail with extra fields" report (adds full address + comms prefs fields).
+
 ## Release 1.6
 
 * Regenerate civix for PHP7.4 compatibility.
