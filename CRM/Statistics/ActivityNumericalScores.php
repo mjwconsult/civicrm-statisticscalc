@@ -233,12 +233,7 @@ class CRM_Statistics_ActivityNumericalScores {
       return;
     }
 
-    if (CRM_Core_Transaction::isActive()) {
-      CRM_Core_Transaction::addCallback(CRM_Core_Transaction::PHASE_POST_COMMIT, 'CRM_Statistics_ActivityNumericalScores::callbackCalculateActivityScores', [$event->id]);
-    }
-    else {
-      CRM_Statistics_ActivityNumericalScores::callbackCalculateActivityScores($event->id);
-    }
+    CRM_Statistics_ActivityNumericalScores::callbackCalculateActivityScores($event->id);
   }
 
   /**

@@ -22,18 +22,9 @@ function statisticscalc_civicrm_config(&$config) {
     return;
   }
   Civi::$statics[__FUNCTION__] = 1;
-  Civi::dispatcher()->addListener('hook_civicrm_post', 'CRM_Statistics_ActivityNumericalScores::callbackPostCalculateActivityScores');
+  Civi::dispatcher()->addListener('hook_civicrm_postCommit', 'CRM_Statistics_ActivityNumericalScores::callbackPostCalculateActivityScores');
   Civi::dispatcher()->addListener('hook_civicrm_caseChange', 'CRM_Statistics_CaseStatistics::hookCaseChangeCalculateScores');
   _statisticscalc_civix_civicrm_config($config);
-}
-
-/**
- * Implements hook_civicrm_xmlMenu().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_xmlMenu
- */
-function statisticscalc_civicrm_xmlMenu(&$files) {
-  _statisticscalc_civix_civicrm_xmlMenu($files);
 }
 
 /**
@@ -88,27 +79,6 @@ function statisticscalc_civicrm_disable() {
  */
 function statisticscalc_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
   return _statisticscalc_civix_civicrm_upgrade($op, $queue);
-}
-
-/**
- * Implements hook_civicrm_managed().
- *
- * Generate a list of entities to create/deactivate/delete when this module
- * is installed, disabled, uninstalled.
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
- */
-function statisticscalc_civicrm_managed(&$entities) {
-  _statisticscalc_civix_civicrm_managed($entities);
-}
-
-/**
- * Implements hook_civicrm_alterSettingsFolders().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
- */
-function statisticscalc_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
-  _statisticscalc_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
 /**
