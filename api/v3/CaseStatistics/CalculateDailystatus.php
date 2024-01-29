@@ -64,7 +64,7 @@ function civicrm_api3_case_statistics_calculate_dailystatus($params) {
     if (!$startDate) {
       $startDate = CRM_Statistics_CaseStatus::getStartDateForStatusCounts();
     }
-    $startDate->modify(new DateInterval('P1D'));
+    $startDate->modify('+1 day');
   }
   $lastDate->setTime(0,0,0);
 
