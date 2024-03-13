@@ -29,7 +29,7 @@ function _civicrm_api3_case_statistics_generate_spec(&$spec) {
  * @param array $params
  *
  * @return array API result descriptor
- * @throws \CiviCRM_API3_Exception
+ * @throws \CRM_Core_Exception
  */
 function civicrm_api3_case_statistics_generate($params) {
   if (!empty($params['case_id'])) {

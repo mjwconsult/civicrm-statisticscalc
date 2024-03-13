@@ -18,7 +18,7 @@ class CRM_Statistics_CaseStatistics {
    *
    * @return array
    * @throws \CRM_Core_Exception
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
   public static function calculate($entityIDs) {
     CRM_Statistics_Utils_Hook::getStatisticsMetadata($metadata);
@@ -83,7 +83,7 @@ class CRM_Statistics_CaseStatistics {
    *
    * @return array
    * @throws \CRM_Core_Exception
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
   public static function getCaseActivityCounts($caseId, $activityTypesCount) {
     if (empty($caseId)) {
@@ -121,7 +121,7 @@ class CRM_Statistics_CaseStatistics {
    *
    * @return array
    * @throws \CRM_Core_Exception
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
   public static function getCaseActivityFields($caseId, $activityTypesField) {
     $activityFieldsToReturn = ['activity_type_id' => 'activity_type_id'];
@@ -196,7 +196,7 @@ class CRM_Statistics_CaseStatistics {
   /**
    * Callback for hookCaseChangeCalculateScores
    *
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
   public static function hookCaseChangeCalculateScoresCallback() {
     if (!isset(Civi::$statics[__CLASS__]['generate'])) {

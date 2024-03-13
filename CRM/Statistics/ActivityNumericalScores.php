@@ -20,9 +20,9 @@ class CRM_Statistics_ActivityNumericalScores {
    *   limit and offset per API3
    *
    * @return array
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
-  public static function calculate($activityIds, $options) {
+  public static function calculate(array $activityIds, array $options) {
     CRM_Statistics_Utils_Hook::getStatisticsMetadata($metadata);
     $results = [];
     if (!empty($metadata['activity'])) {
@@ -49,9 +49,9 @@ class CRM_Statistics_ActivityNumericalScores {
    * @param array $options
    *
    * @return array
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
-  public static function getActivityIdsByActivityType($activityTypeName, $activityIds = [], $options) {
+  public static function getActivityIdsByActivityType($activityTypeName, array $activityIds = [], array $options = []) {
     $activityParams = [
       'return' => ['id'],
       'activity_type_id' => $activityTypeName,
@@ -72,14 +72,14 @@ class CRM_Statistics_ActivityNumericalScores {
   }
 
   /**
-   * @param $calculationsMetadata
+   * @param array $calculationsMetadata
    * @param array $activityIds
    * @param array $options
    *
    * @return array
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
-  public static function runCalculations($calculationsMetadata, $activityIds = [], $options) {
+  public static function runCalculations(array $calculationsMetadata, array $activityIds = [], array $options = []) {
     foreach ($calculationsMetadata as $activityTypeName => $calculations) {
       $filteredActivityIds = self::getActivityIdsByActivityType($activityTypeName, $activityIds, $options);
       foreach ($filteredActivityIds as $activityId) {
@@ -171,7 +171,7 @@ class CRM_Statistics_ActivityNumericalScores {
    * @param array $calculations
    *
    * @return array
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
   private static function getActivityDetailsForCalculations($activityId, $calculations) {
     $return = ['case_id', 'subject'];
@@ -221,7 +221,7 @@ class CRM_Statistics_ActivityNumericalScores {
    *
    * @param \Civi\Core\Event\GenericHookEvent $event
    *
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
   public static function callbackPostCalculateActivityScores($event) {
     if ($event->entity !== 'Activity') {
@@ -239,7 +239,7 @@ class CRM_Statistics_ActivityNumericalScores {
   /**
    * @param int $activityId
    *
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
   public static function callbackCalculateActivityScores($activityId) {
     civicrm_api3('CaseStatistics', 'calculate_scores', ['activity_id' => $activityId]);

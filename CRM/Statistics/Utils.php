@@ -19,7 +19,7 @@ class CRM_Statistics_Utils {
    * @param bool $fullString
    *
    * @return mixed
-   * @throws \CiviCRM_API3_Exception
+   * @throws \CRM_Core_Exception
    */
   public static function getCustomByName($fieldName, $fieldGroup, $fullString = TRUE) {
     if (!isset(Civi::$statics[__CLASS__][$fieldGroup][$fieldName])) {
